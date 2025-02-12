@@ -1,15 +1,32 @@
 import "./datatable.scss";
 import { DataGrid } from "@mui/x-data-grid";
 import { userColumns, userRows } from "../../datatablesource";
-import { Link } from "react-router-dom";
-import { useState } from "react";
+import { Link, useLocation } from "react-router-dom";
+import { useState,useEffect } from "react";
+import useFetch from "../../Hooks/useFetch";
+import { use } from "react";
+import axios from "axios";
 
-const Datatable = () => {
-  const [data, setData] = useState(userRows);
+const Datatable = ({columns} ) => {
+  const location = useLocation();
+  const path = location.pathname.split("/")[1];
+  const[list,setList] = useState([]);
+  const {data,error,loading} =useFetch(`http://localhost:5000/${path}`);
+  console.log(data);
 
-  const handleDelete = (id) => {
-    setData(data.filter((item) => item.id !== id));
+  const handleDelete = async (id) => {
+    try {
+      await axios.delete(`http://localhost:5000/${path}/${id}`);
+      setList(list.filter((item) => item._id !== id));
+      
+    } catch (error) {
+      return error;
+    }
+    
   };
+  useEffect(()=>{
+    setList(data);
+  },[data])
 
   const actionColumn = [
     {
@@ -24,7 +41,7 @@ const Datatable = () => {
             </Link>
             <div
               className="deleteButton"
-              onClick={() => handleDelete(params.row.id)}
+              onClick={() => handleDelete(params.row._id)}
             >
               Delete
             </div>
@@ -33,6 +50,7 @@ const Datatable = () => {
       },
     },
   ];
+
   return (
     <div className="datatable">
       <div className="datatableTitle">
@@ -43,11 +61,13 @@ const Datatable = () => {
       </div>
       <DataGrid
         className="datagrid"
-        rows={data}
-        columns={userColumns.concat(actionColumn)}
+        rows={list}
+      
+        columns={columns.concat(actionColumn)}
         pageSize={9}
         rowsPerPageOptions={[9]}
         checkboxSelection
+        getRowId={(row) => row?._id}
       />
     </div>
   );

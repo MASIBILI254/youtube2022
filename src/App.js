@@ -7,32 +7,46 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { productInputs, userInputs } from "./formSource";
 import "./style/dark.scss";
 import { useContext } from "react";
+import {Navigate } from "react-router-dom";
 import { DarkModeContext } from "./context/darkModeContext";
+import { AuthContext } from "./context/AuthContext";
+import { hotelColumns, userColumns } from "./datatablesource";
 
 function App() {
   const { darkMode } = useContext(DarkModeContext);
-
+  const ProtectedRoutes = ({ children }) => {
+    const {user } = useContext(AuthContext);
+    console.log(user);
+    if (user) {
+      return children;
+      
+    } else {
+      console.log("user is not logged in");
+      return <Navigate to="/Login" />;
+      
+    }
+  };
   return (
     <div className={darkMode ? "app dark" : "app"}>
       <BrowserRouter>
         <Routes>
           <Route path="/">
-            <Route index element={<Home />} />
             <Route path="login" element={<Login />} />
+            <Route index element={<ProtectedRoutes><Home /></ProtectedRoutes>} />
             <Route path="users">
-              <Route index element={<List />} />
-              <Route path=":userId" element={<Single />} />
+              <Route index element={<ProtectedRoutes><List columns={userColumns} /></ProtectedRoutes>} />
+              <Route path=":userId" element={<ProtectedRoutes><Single /></ProtectedRoutes>} />
               <Route
                 path="new"
-                element={<New inputs={userInputs} title="Add New User" />}
+                element={<ProtectedRoutes><New inputs={userInputs} title="Add New User" /></ProtectedRoutes>}
               />
             </Route>
-            <Route path="products">
-              <Route index element={<List />} />
-              <Route path=":productId" element={<Single />} />
+            <Route path="hotel">
+              <Route index element={<ProtectedRoutes><List columns={hotelColumns}/></ProtectedRoutes>} />
+              <Route path=":productId" element={<ProtectedRoutes><Single /></ProtectedRoutes>} />
               <Route
                 path="new"
-                element={<New inputs={productInputs} title="Add New Product" />}
+                element={<ProtectedRoutes><New inputs={productInputs} title="Add New Product" /></ProtectedRoutes>}
               />
             </Route>
           </Route>
@@ -41,5 +55,4 @@ function App() {
     </div>
   );
 }
-
 export default App;
